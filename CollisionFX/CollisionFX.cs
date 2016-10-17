@@ -89,7 +89,7 @@ namespace CollisionFX
             if (part.Modules.Contains("ModuleWheelDamage"))
                 moduleWheelDamage = part.Modules["ModuleWheelDamage"] as ModuleWheelDamage;
             wheelCollider = part.GetComponent<WheelCollider>();
-            // No longer necessary - Alshain01
+            // No longer necessary, all wheel parts and landing gear parts are the same now - Alshain01
             /*if (wheelCollider == null)
             {
                 ModuleLandingGear gear = part.GetComponent<ModuleLandingGear>();
@@ -496,7 +496,7 @@ namespace CollisionFX
                 if (moduleWheel != null)
                 {
                     // Has a wheel module.
-                    if (!moduleWheelDamage.isDamaged)
+                    if (moduleWheelDamage != null && !moduleWheelDamage.isDamaged)
                     {
                         // Has an intact wheel.
                         StopScrapeLightSound();
@@ -579,6 +579,9 @@ namespace CollisionFX
             if (moduleWheel == null)
                 return false;
             // Has a wheel module.
+
+            if (moduleWheelDamage == null)
+                return true;
 
             // Has an intact wheel.
             return !moduleWheelDamage.isDamaged;
