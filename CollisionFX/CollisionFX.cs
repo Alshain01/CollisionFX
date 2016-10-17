@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using ModuleWheels;
 
 /**********************************************************
  * TODO:
@@ -46,7 +47,8 @@ namespace CollisionFX
         ParticleAnimator dustAnimator;
         //private GameObject fragmentFx;
         //ParticleAnimator fragmentAnimator;
-        private ModuleWheel moduleWheel = null;
+        private ModuleWheelBase moduleWheel = null;
+        private ModuleWheelDamage moduleWheelDamage = null;
         private WheelCollider wheelCollider = null;
         private FXGroup ScrapeSounds = new FXGroup("ScrapeSounds");
         private FXGroup SparkSounds = new FXGroup("SparkSounds");
@@ -82,32 +84,37 @@ namespace CollisionFX
             if (scrapeSparks)
                 SetupLight();
 
-            if (part.Modules.Contains("ModuleWheel")) // Suppress the log message on failure.
-                moduleWheel = part.Modules["ModuleWheel"] as ModuleWheel;
+            if (part.Modules.Contains("ModuleWheelBase")) // Suppress the log message on failure.
+                moduleWheel = part.Modules["ModuleWheelBase"] as ModuleWheelBase;
+            if (part.Modules.Contains("ModuleWheelDamage"))
+                moduleWheelDamage = part.Modules["ModuleWheelDamage"] as ModuleWheelDamage;
             wheelCollider = part.GetComponent<WheelCollider>();
-            if (wheelCollider == null)
+            // No longer necessary - Alshain01
+            /*if (wheelCollider == null)
             {
                 ModuleLandingGear gear = part.GetComponent<ModuleLandingGear>();
                 if (gear != null)
                 {
                     wheelCollider = gear.wheelCollider;
                 }
-            }
+            }*/
 
             SetupAudio();
 
             GameEvents.onGamePause.Add(OnPause);
             GameEvents.onGameUnpause.Add(OnUnpause);
 
+/*Unable to find a fix, debug code so I just disabled it - Alshain
 #if DEBUG
             for (int i = 0; i < spheres.Length; i++)
             {
                 spheres[i] = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                 Destroy(spheres[i].collider);
             }
-            spheres[0].renderer.material.color = Color.red;
-            spheres[1].renderer.material.color = Color.green;
+            spheres[0].GetComponent<Renderer>().material.color = Color.red;
+            spheres[1].GetComponent<Renderer>().material.color = Color.green;
 #endif
+*/
         }
 
         private bool _paused = false;
@@ -142,7 +149,7 @@ namespace CollisionFX
                 if (c.contacts.Length == 0)
                     return;
 
-                var cInfo = GetClosestChild(part, c.contacts[0].point + (part.rigidbody.velocity * Time.deltaTime));
+                var cInfo = GetClosestChild(part, c.contacts[0].point + (part.Rigidbody.velocity * Time.deltaTime));
                 if (cInfo.CollisionFX != null)
                 {
                     cInfo.CollisionFX.Impact(cInfo.IsWheel);
@@ -162,7 +169,7 @@ namespace CollisionFX
             if (!scrapeSparks || _paused) return;
 
             // Contact points are from the previous frame. Add the velocity to get the correct position.
-            var cInfo = GetClosestChild(part, c.contacts[0].point + (part.rigidbody.velocity * Time.deltaTime));
+            var cInfo = GetClosestChild(part, c.contacts[0].point + (part.Rigidbody.velocity * Time.deltaTime));
             if (cInfo.CollisionFX != null)
             {
                 StopScrapeLightSound();
@@ -184,7 +191,7 @@ namespace CollisionFX
             StopScrapeLightSound();
             if (c.contacts.Length > 0)
             {
-                var cInfo = GetClosestChild(part, c.contacts[0].point + (part.rigidbody.velocity * Time.deltaTime));
+                var cInfo = GetClosestChild(part, c.contacts[0].point + (part.Rigidbody.velocity * Time.deltaTime));
                 if (cInfo.CollisionFX != null)
                     cInfo.CollisionFX.StopScrapeLightSound();
             }
@@ -249,7 +256,7 @@ namespace CollisionFX
                                             "fx_ks1_emit"
                                          };*/
 
-        //int currentParticle = 0;
+            //int currentParticle = 0;
         private void SetupParticles()
         {
             /*UnityEngine.Object o = null;
@@ -268,22 +275,22 @@ namespace CollisionFX
                 sparkFx = (GameObject)GameObject.Instantiate(UnityEngine.Resources.Load("Effects/fx_exhaustSparks_flameout"));
                 sparkFx.transform.parent = part.transform;
                 sparkFx.transform.position = part.transform.position;
-                sparkFx.particleEmitter.localVelocity = Vector3.zero;
-                sparkFx.particleEmitter.useWorldSpace = true;
-                sparkFx.particleEmitter.emit = false;
-                sparkFx.particleEmitter.minEnergy = 0;
-                sparkFx.particleEmitter.minEmission = 0;
+                sparkFx.GetComponent<ParticleEmitter>().localVelocity = Vector3.zero;
+                sparkFx.GetComponent<ParticleEmitter>().useWorldSpace = true;
+                sparkFx.GetComponent<ParticleEmitter>().emit = false;
+                sparkFx.GetComponent<ParticleEmitter>().minEnergy = 0;
+                sparkFx.GetComponent<ParticleEmitter>().minEmission = 0;
             }
 
             dustFx = (GameObject)GameObject.Instantiate(UnityEngine.Resources.Load("Effects/fx_smokeTrail_light"));
             dustFx.transform.parent = part.transform;
             dustFx.transform.position = part.transform.position;
-            dustFx.particleEmitter.localVelocity = Vector3.zero;
-            dustFx.particleEmitter.useWorldSpace = true;
-            dustFx.particleEmitter.emit = false;
-            dustFx.particleEmitter.minEnergy = 0;
-            dustFx.particleEmitter.minEmission = 0;
-            dustAnimator = dustFx.particleEmitter.GetComponent<ParticleAnimator>();
+            dustFx.GetComponent<ParticleEmitter>().localVelocity = Vector3.zero;
+            dustFx.GetComponent<ParticleEmitter>().useWorldSpace = true;
+            dustFx.GetComponent<ParticleEmitter>().emit = false;
+            dustFx.GetComponent<ParticleEmitter>().minEnergy = 0;
+            dustFx.GetComponent<ParticleEmitter>().minEmission = 0;
+            dustAnimator = dustFx.GetComponent<ParticleEmitter>().GetComponent<ParticleAnimator>();
 
             /*fragmentFx = (GameObject)GameObject.Instantiate(UnityEngine.Resources.Load("Effects/fx_exhaustSparks_yellow"));
             fragmentFx.transform.parent = part.transform;
@@ -393,9 +400,9 @@ namespace CollisionFX
         {
             Color c = ColourManager.GetBiomeColour(col);
             dustFx.transform.position = contactPoint;
-            dustFx.particleEmitter.maxEnergy = 10;
-            dustFx.particleEmitter.maxEmission = 75;
-            dustFx.particleEmitter.Emit();
+            dustFx.GetComponent<ParticleEmitter>().maxEnergy = 10;
+            dustFx.GetComponent<ParticleEmitter>().maxEmission = 75;
+            dustFx.GetComponent<ParticleEmitter>().Emit();
             //dustFx.particleEmitter.worldVelocity = -part.rigidbody.velocity;
             // Set dust biome colour.
             if (dustAnimator != null)
@@ -490,11 +497,11 @@ namespace CollisionFX
                 if (moduleWheel != null)
                 {
                     // Has a wheel module.
-                    if (!moduleWheel.isDamaged)
+                    if (!moduleWheelDamage.isDamaged)
                     {
                         // Has an intact wheel.
                         StopScrapeLightSound();
-                        ScrapeParticles(m, c.contacts[0].point + (part.rigidbody.velocity * Time.deltaTime), c.collider, c.gameObject);
+                        ScrapeParticles(m, c.contacts[0].point + (part.Rigidbody.velocity * Time.deltaTime), c.collider, c.gameObject);
                         return;
                     }
                 }
@@ -509,13 +516,13 @@ namespace CollisionFX
 
             if (sparkFx != null)
                 sparkFx.transform.LookAt(c.transform);
-            if (part.rigidbody == null) // Part destroyed?
+            if (part.Rigidbody == null) // Part destroyed?
             {
                 StopScrapeLightSound();
                 return;
             }
 
-            ScrapeParticles(m, c.contacts[0].point + (part.rigidbody.velocity * Time.deltaTime), c.collider, c.gameObject);
+            ScrapeParticles(m, c.contacts[0].point + (part.Rigidbody.velocity * Time.deltaTime), c.collider, c.gameObject);
             ScrapeSound(ScrapeSounds, m);
             if (CanSpark(c.collider, c.gameObject))
                 ScrapeSound(SparkSounds, m);
@@ -526,10 +533,10 @@ namespace CollisionFX
             }
 
 #if DEBUG
-            spheres[0].renderer.enabled = false;
-            spheres[1].renderer.enabled = true;
+            spheres[0].GetComponent<Renderer>().enabled = false;
+            spheres[1].GetComponent<Renderer>().enabled = true;
             spheres[1].transform.position = part.transform.position;
-            spheres[2].transform.position = c.contacts[0].point + (part.rigidbody.velocity * Time.deltaTime);
+            spheres[2].transform.position = c.contacts[0].point + (part.Rigidbody.velocity * Time.deltaTime);
 #endif
         }
 
@@ -542,8 +549,8 @@ namespace CollisionFX
 #if DEBUG
                 Debug.Log("#Stopping scrape sparks");
                 spheres[0].transform.position = part.transform.position;
-                spheres[0].renderer.enabled = true;
-                spheres[1].renderer.enabled = false;
+                spheres[0].GetComponent<Renderer>().enabled = true;
+                spheres[1].GetComponent<Renderer>().enabled = false;
 #endif
                 scrapeLight.enabled = false;
             }
@@ -575,7 +582,7 @@ namespace CollisionFX
             // Has a wheel module.
 
             // Has an intact wheel.
-            return !moduleWheel.isDamaged;
+            return !moduleWheelDamage.isDamaged;
         }
 
         public bool IsRagdoll(GameObject g)
@@ -621,10 +628,10 @@ namespace CollisionFX
                     if (CanSpark(col, collidedWith) && FlightGlobals.ActiveVessel.atmDensity > 0 && FlightGlobals.currentMainBody.atmosphereContainsOxygen)
                     {
                         sparkFx.transform.position = contactPoint;
-                        sparkFx.particleEmitter.maxEnergy = speed / 10;                          // Values determined
-                        sparkFx.particleEmitter.maxEmission = Mathf.Clamp((speed * 2), 0, 75);   // via experimentation.
-                        sparkFx.particleEmitter.Emit();
-                        sparkFx.particleEmitter.worldVelocity = -part.rigidbody.velocity;
+                        sparkFx.GetComponent<ParticleEmitter>().maxEnergy = speed / 10;                          // Values determined
+                        sparkFx.GetComponent<ParticleEmitter>().maxEmission = Mathf.Clamp((speed * 2), 0, 75);   // via experimentation.
+                        sparkFx.GetComponent<ParticleEmitter>().Emit();
+                        sparkFx.GetComponent<ParticleEmitter>().worldVelocity = -part.Rigidbody.velocity;
                         scrapeLight.enabled = true;
                         scrapeLight.color = Color.Lerp(lightColor1, lightColor2, UnityEngine.Random.Range(0f, 1f));
                         float intensityMultiplier = 1;
@@ -659,9 +666,9 @@ namespace CollisionFX
                 {
                     Color c = ColourManager.GetBiomeColour(col);
                     dustFx.transform.position = contactPoint;
-                    dustFx.particleEmitter.maxEnergy = speed / 10;                          // Values determined
-                    dustFx.particleEmitter.maxEmission = Mathf.Clamp((speed * 2), 0, 75);   // via experimentation.
-                    dustFx.particleEmitter.Emit();
+                    dustFx.GetComponent<ParticleEmitter>().maxEnergy = speed / 10;                          // Values determined
+                    dustFx.GetComponent<ParticleEmitter>().maxEmission = Mathf.Clamp((speed * 2), 0, 75);   // via experimentation.
+                    dustFx.GetComponent<ParticleEmitter>().Emit();
                     //dustFx.particleEmitter.worldVelocity = -part.rigidbody.velocity;
                     // Set dust biome colour.
                     if (dustAnimator != null)
@@ -721,8 +728,7 @@ namespace CollisionFX
                 var game = GamePersistence.LoadGame("persistent", HighLogic.SaveFolder, true, false);
                 if (game != null && game.flightState != null && game.compatible)
                     FlightDriver.StartAndFocusVessel(game, game.flightState.activeVesselIdx);
-                CheatOptions.InfiniteFuel = true;
-                CheatOptions.InfiniteRCS = true;
+                CheatOptions.InfinitePropellant = true;
             }
         }
     }
