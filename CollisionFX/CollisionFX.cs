@@ -104,17 +104,16 @@ namespace CollisionFX
             GameEvents.onGamePause.Add(OnPause);
             GameEvents.onGameUnpause.Add(OnUnpause);
 
-/*Unable to find a fix, debug code so I just disabled it - Alshain
 #if DEBUG
             for (int i = 0; i < spheres.Length; i++)
             {
                 spheres[i] = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                Destroy(spheres[i].collider);
+                Destroy(spheres[i].GetComponent<Collider>());
             }
             spheres[0].GetComponent<Renderer>().material.color = Color.red;
             spheres[1].GetComponent<Renderer>().material.color = Color.green;
 #endif
-*/
+
         }
 
         private bool _paused = false;
